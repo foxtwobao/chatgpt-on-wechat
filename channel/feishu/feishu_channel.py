@@ -65,6 +65,7 @@ class FeiShuChanel(ChatChannel):
         logger.info(f"[FeiShu] start send reply message, type={context.type}, content={reply.content}")
         reply_content = reply.content
         content_key = "text"
+        
         if reply.type == ReplyType.IMAGE_URL:
             # 图片上传
             reply_content = self._upload_image_url(reply.content, access_token)
@@ -73,6 +74,26 @@ class FeiShuChanel(ChatChannel):
                 return
             msg_type = "image"
             content_key = "image_key"
+        
+        # **修改部分：构造卡片消息**
+        else:  # 假设您有一个卡片类型
+            msg_type = "interactive"
+            content_key = "card"
+            reply_content = {
+                "config": {
+                    "wide_screen_mode": True
+                },
+                "elements": [
+                    {
+                        "tag": "div",
+                        "text": {
+                            "tag": "lark_md",
+                            "content": reply.content  # 使用富文本内容
+                        }
+                    }
+                ]
+            }
+        
         if is_group:
             # 群聊中直接回复
             url = f"https://open.feishu.cn/open-apis/im/v1/messages/{msg.msg_id}/reply"
@@ -95,6 +116,7 @@ class FeiShuChanel(ChatChannel):
             logger.info(f"[FeiShu] send message success")
         else:
             logger.error(f"[FeiShu] send message failed, code={res.get('code')}, msg={res.get('msg')}")
+
 
 
     def fetch_access_token(self) -> str:
